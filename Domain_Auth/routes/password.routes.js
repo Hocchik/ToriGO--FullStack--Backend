@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestPasswordReset, resetPassword } from '../../controllers/auth/password.controller.js';
+import { requestPasswordReset, resetPassword } from '../controllers/password.controller.js';
 
 const router = express.Router();
 

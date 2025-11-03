@@ -1,4 +1,4 @@
-import * as authService from '../../services/auth.service.js';
+import * as authService from '../services/auth.service.js';
 
 // Registro de pasajeros
 export const registerUser = async (req, res) => {

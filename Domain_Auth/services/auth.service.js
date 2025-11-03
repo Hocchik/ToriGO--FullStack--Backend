@@ -8,7 +8,7 @@ import { createPassenger } from '../repositories/passenger.repository.js';
 import {
   createDriver,
   validateDriverData
-} from '../repositories/driver.repository.js';
+} from '../../repositories/driver.repository.js';
 import { getUserRoles } from '../repositories/role.repository.js';
 import { generateToken } from '../utils/tokenUtils.js';
 import bcrypt from 'bcrypt';

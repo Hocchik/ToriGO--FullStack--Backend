@@ -5,11 +5,11 @@ import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
 import pool from './config/dbConfig.js';
-import authRoutes from './routes/auth/auth.routes.js';
-import tripRoutes from './routes/trip/trip.routes.js';
-import motorcycleRoutes from './routes/driver/motorcycle.routes.js';
-import passwordRoutes from './routes/auth/password.routes.js';
-import testRoutes from './routes/dbTest.routes.js';
+import authRoutes from './Domain_Auth/routes/auth/auth.routes.js';
+import tripRoutes from './Domain_Trip/routes/trip.routes.js';
+import motorcycleRoutes from './Domain_Driver/routes/motorcycle.routes.js';
+import passwordRoutes from './Domain_Auth/routes/auth/password.routes.js';
+import testRoutes from './test/dbTest.routes.js';
 
 import swaggerUi from 'swagger-ui-express';
 

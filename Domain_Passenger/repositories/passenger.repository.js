@@ -1,4 +1,4 @@
-import pool from '../config/dbConfig.js';
+import pool from '../../config/dbConfig.js';
 
 export const createPassenger = async ({ user_id, guardian_id = null }) => {
   const result = await pool.query(

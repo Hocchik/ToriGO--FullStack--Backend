@@ -1,4 +1,4 @@
-import pool from '../config/dbConfig.js';
+import pool from '../../config/dbConfig.js';
 
 export const createUser = async ({ name, last_name, dni, age, email, phone, password, role }) => {
   const id = crypto.randomUUID(); 

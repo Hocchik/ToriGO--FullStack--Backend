@@ -1,7 +1,7 @@
 import express from 'express';
-import { createMotorcycle, getDriverMotorcycle } from '../../controllers/driver/motorcycle.controller.js';
-import { authenticate } from '../../middlewares/auth.middleware.js';
-import { authorizeRole } from '../../middlewares/role.middleware.js';
+import { createMotorcycle, getDriverMotorcycle } from '../controllers/motorcycle.controller.js';
+import { authenticate } from '../../Domain_Auth/middlewares/auth.middleware.js';
+import { authorizeRole } from '../../Domain_Auth/middlewares/role.middleware.js';
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import pool from '../config/dbConfig.js';
+import pool from '../../config/dbConfig.js';
 
 export const getUserRoles = async (user_id) => {
   const roles = [];
