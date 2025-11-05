@@ -3,12 +3,13 @@ import path from 'path';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import { Server } from 'socket.io';
 import pool from './config/dbConfig.js';
-import authRoutes from './Domain_Auth/routes/auth/auth.routes.js';
+import authRoutes from './Domain_Auth/routes/auth.routes.js';
 import tripRoutes from './Domain_Trip/routes/trip.routes.js';
 import motorcycleRoutes from './Domain_Driver/routes/motorcycle.routes.js';
-import passwordRoutes from './Domain_Auth/routes/auth/password.routes.js';
+import passwordRoutes from './Domain_Auth/routes/password.routes.js';
 import testRoutes from './test/dbTest.routes.js';
 
 import swaggerUi from 'swagger-ui-express';
@@ -18,6 +19,7 @@ const swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, 'utf8'));
 
 const app = express();
 const server = http.createServer(app);
+dotenv.config();
 
 const io = new Server(server, {
   cors: { origin: '*' }

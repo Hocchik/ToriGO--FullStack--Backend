@@ -1,12 +1,12 @@
-import pool from '../config/dbConfig.js';
+import pool from '../../config/dbConfig.js';
 import crypto from 'crypto';
 
 export const createDriver = async (driver) => {
-  const {user_id, license, plate} = driver;
+  const {user_id, license_number, plate} = driver;
   const id = crypto.randomUUID();
   const result = await pool.query(
     `INSERT INTO drivers (license, plate, id, user_id) VALUES ($1, $2, $3, $4) RETURNING *`,
-    [license, plate, id, user_id]
+    [license_number, plate, id, user_id]
   );
   return result.rows[0];
 };
@@ -21,7 +21,7 @@ export const finbyId = async (id) => {
 
 // Puedes agregar más funciones aquí según lo necesites
 
-export const validateDriverData = async(dni, license, plate, name, last_name) => {
+export const validateDriverData = async(dni, license_number, plate, name, last_name) => {
   // Validar que el DNI del conductor exista
   const driverResult = await pool.query(
     `SELECT * FROM registered_drivers WHERE dni = $1 AND name = $2 AND last_name = $3`,
@@ -39,7 +39,7 @@ export const validateDriverData = async(dni, license, plate, name, last_name) =>
 
   const driverLicenseResult = await pool.query(
     `SELECT * FROM drivers_license WHERE id_registered_driver = $1 AND license_number = $2`,
-    [driverId, license]
+    [driverId, license_number]
   );
 
   if(driverLicenseResult.rowCount === 0) {

@@ -1,4 +1,4 @@
-import pool from '../config/dbConfig.js';
+import pool from '../../config/dbConfig.js';
 
 export const createTrip = async ({ passenger_id, origin, destination, fare }) => {
   const result = await pool.query(

@@ -1,4 +1,4 @@
-import { createTrip, getTripsByUser, updateTripStatus } from '../../repositories/trip.repository.js';
+import { createTrip, getTripsByUser, updateTripStatus } from '../repositories/trip.repository.js';
 import { calculateFare } from '../utils/fareCalculator.js';
 
 export const requestTrip = async (req, res) => {
