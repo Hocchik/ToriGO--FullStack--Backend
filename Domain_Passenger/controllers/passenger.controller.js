@@ -1,5 +1,5 @@
 // controllers/passengerController.js
-import { createPassenger, findPassengerByDNI } from '../../models/Passenger.js';
+import { createPassenger, findPassengerByDNI } from '../models/Passenger.js';
 
 export const registerPassenger = async (req, res) => {
   try {

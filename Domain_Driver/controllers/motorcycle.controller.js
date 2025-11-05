@@ -1,4 +1,4 @@
-import { registerMotorcycle, getMotorcycleByDriver } from '../../repositories/motorcycle.repository.js';
+import { registerMotorcycle, getMotorcycleByDriver } from '../repositories/motorcycle.repository.js';
 
 export const createMotorcycle = async (req, res) => {
   try {

@@ -1,5 +1,6 @@
-import pkg from 'pg';
-const { Pool } = pkg;
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
@@ -9,4 +10,11 @@ const pool = new Pool({
   port: process.env.PORT_DB || 5432,
 });
 
-export default pool;
+pool.query('SELECT NOW()')
+  .then(res => {
+    console.log('Conexión exitosa:', res.rows[0]);
+    pool.end();
+  })
+  .catch(err => {
+    console.error('Error de conexión:', err);
+  });

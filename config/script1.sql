@@ -123,6 +123,8 @@ CREATE TABLE public.passengers (
 
 CREATE TABLE public.registered_vehicles (
 	plate text NOT NULL,
+	color text NOT NULL,
+	model text NOT NULL,
 	brand text NOT NULL,
 	driver_id uuid NOT NULL,
 	CONSTRAINT registered_vehicles_pkey PRIMARY KEY (plate),

@@ -1,5 +1,5 @@
 import { findUserByEmail } from '../repositories/user.repository.js';
-import { createPasswordResetToken, verifyPasswordResetToken, updateUserPassword } from '../../repositories/passwordReset.repository.js';
+import { createPasswordResetToken, verifyPasswordResetToken, updateUserPassword } from '../repositories/passwordReset.repository.js';
 import { sendResetTokenEmail } from '../utils/emailSender.js';
 import bcrypt from 'bcrypt';
 

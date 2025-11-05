@@ -4,15 +4,15 @@ import {
   findUserByEmailOrPhone,
   logIn
 } from '../repositories/user.repository.js';
-import { createPassenger } from '../repositories/passenger.repository.js';
+import { createPassenger } from '../../Domain_Passenger/repositories/passenger.repository.js';
 import {
   createDriver,
   validateDriverData
-} from '../../repositories/driver.repository.js';
+} from '../../Domain_Driver/repositories/driver.repository.js';
 import { getUserRoles } from '../repositories/role.repository.js';
 import { generateToken } from '../utils/tokenUtils.js';
 import bcrypt from 'bcrypt';
-// ...existing code...
+
 
 // Registrar pasajeros
 export const registerPassenger = async (RegisterPassengerDto) => {
@@ -83,27 +83,26 @@ export const registerPassenger = async (RegisterPassengerDto) => {
 
 // Registrar conductores
 export const registerDriver = async (RegisterDriverDto) => {
+  // Nos aseguramos que el DTO tenga el campo role: "DRIVER"
+  const driverDto = { ...RegisterDriverDto, role: "DRIVER" };
+
   const {
     name,
     last_name,
     dni,
-    age,
+    plate,
+    license_number,
+    license_expiration_date,
+    insurance_policy_number,
+    insurance_policy_expiration_date,
     email,
     phone,
     password,
-    role,
-    license,
-    plate,
-    insurance_policy,
-    expiration_date,
-  } = RegisterDriverDto;
+    role
+  } = driverDto;
 
-  /*
-    validaciones de los campos
-  */
-
-  // verificamos se hayan llenado todos los campos del form correctament
-  const validation = await validateData(RegisterDriverDto, "DRIVER");
+  // validaciones de los campos
+  const validation = await validateData(driverDto);
 
 
   if (!validation.valid) {
@@ -115,7 +114,8 @@ export const registerDriver = async (RegisterDriverDto) => {
      la placa del vehiculo 
   */
 
-  const is_data_valid = await validateDriverData(dni, license, plate, name, last_name);
+  const is_data_valid = await validateDriverData(dni, license_number, plate, name, last_name);
+  //Falta validar el SOAT y las fechas de expiracion (licencia y SOAT)
 
   if (!is_data_valid) {
     return {
@@ -127,21 +127,24 @@ export const registerDriver = async (RegisterDriverDto) => {
 
   // creamos el usuario
   const hashedPassword = await bcrypt.hash(password, 10);
+  const age_check = 20; // No es necesario para los drivers
+  const role_driver = 'DRIVER';
+
   const user = await createUser({
     name,
     last_name,
     dni,
     phone,
     email,
-    age,
+    age:age_check, // No necesario para los drivers
     password: hashedPassword,
-    role,
+    role: role_driver,
   })
 
     // creamos al driver
     const driver = createDriver({
     user_id: user.id,
-    license,
+    license_number,
     plate,
   });
   
@@ -183,8 +186,7 @@ const validateData = async (RegisterDto) => {
   /*
     Validaciones generales ------------------------------------------------------------
   */
-  
-  const {dni, phone, email, age, password, name, last_name, role} = RegisterDto;
+  const {dni, phone, email, password, name, last_name, role} = RegisterDto;
   
   // Eliminamos espacios vacios del DNI
   // Validamos que el campo del DNI haya sido completado.
@@ -211,7 +213,11 @@ const validateData = async (RegisterDto) => {
   }
   
   if(trimedDNI.length != 8) {
-    return new Error("El DNI debe tener 8 digitos");
+    return {
+      valid: false,
+      status: 400,
+      data: { error: 'El DNI debe tener 8 dígitos' }
+    };
   }
 
   const existingUser = await findUserByDNI(trimedDNI);
@@ -281,7 +287,7 @@ const validateData = async (RegisterDto) => {
   // Validamos que el campo age haya sido completado
   // Validamos que el usuario sea mayor de edad (>=18)
 
-  if(!age) {
+  /* if(!age) {
     return {
       valid: false,
       status: 400,
@@ -295,7 +301,7 @@ const validateData = async (RegisterDto) => {
       status: 400,
       data: { error: 'Debe ser mayor de edad para poder registrarse' }
     };
-  }
+  } */
 
   // Validamos que el campo password haya sido completado
   if(!password) {
@@ -319,11 +325,11 @@ const validateData = async (RegisterDto) => {
   //------------------------------------------------------------------------------------
 
   if(role == "DRIVER") {
-    const {license, plate, insurance_policy, expiration_date } = RegisterDto;
+    const {plate, license_number, license_expiration_date, insurance_policy_number, insurance_policy_expiration_date } = RegisterDto;
 
     // Validaciones de la placa y la licencia
     // Validamos que el campo license y plate hayan sido completados
-    if(!license || !plate) {
+    if(!license_number || !plate) {
       return {
         valid: false,
         status: 400,
@@ -333,11 +339,19 @@ const validateData = async (RegisterDto) => {
 
     // Validamos que la licencia tenga el formato correcto (ejemplo: A06702426) y que tenga 9 caracteres
     const licensePattern = /^[A-Z]\d{8}$/;
-    if(!licensePattern.test(license)) {
+    if(!licensePattern.test(license_number)) {
       return {
         valid: false,
         status: 400,
         data: { error: 'La licencia debe tener el formato correcto (ejemplo: A06702426) y 9 caracteres' }
+      };
+    }
+
+    if(!license_expiration_date) {
+      return {
+        valid: false,
+        status: 400,
+        data: { error: 'Debe ingresar la fecha de expiración de su licencia' }
       };
     }
 
@@ -368,7 +382,7 @@ const validateData = async (RegisterDto) => {
 
     // Validaciones del seguro de poliza y su fecha de expiracion
     //SOAT-EZ-0670-2025
-    if(!insurance_policy) {
+    if(!insurance_policy_number) {
       return {
         valid: false,
         status: 400,
@@ -377,7 +391,7 @@ const validateData = async (RegisterDto) => {
     }
 
     const insurancePolicyPattern = /^SOAT-[A-Z]{2}-\d{4}-\d{4}$/;
-    if(!insurancePolicyPattern.test(insurance_policy)) {
+    if(!insurancePolicyPattern.test(insurance_policy_number)) {
       return {
         valid: false,
         status: 400,
@@ -385,7 +399,7 @@ const validateData = async (RegisterDto) => {
       };
     }
 
-    if(!expiration_date) {
+    if(!insurance_policy_expiration_date) {
       return {
         valid: false,
         status: 400,
@@ -394,7 +408,7 @@ const validateData = async (RegisterDto) => {
     }
     
     const currentDate = new Date();
-    const expDate = new Date(expiration_date);
+    const expDate = new Date(insurance_policy_expiration_date);
     if(expDate <= currentDate) {
       return {
         valid: false,
@@ -420,8 +434,11 @@ const validateData = async (RegisterDto) => {
     };
   }
 
-  // Si role == 'PASSENGER' y ha pasado todas las validaciones, @returns {valid = true}
-
-
+  // Si el rol no es reconocido, retorna error consistente
+  return {
+    valid: false,
+    status: 400,
+    data: { error: 'Rol no reconocido o faltante en el DTO' }
+  };
 }
 

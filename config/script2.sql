@@ -46,27 +46,27 @@ insert into drivers_license (id, license_number, id_registered_driver, issue_dat
 insert into drivers_license (id, license_number, id_registered_driver, issue_date, expiration_date, license_type) values('e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9', 'A13579246', '4e3d2c1b-0a9f-43e2-b5c6-d7a8e9f0b1c2', '2024-06-15', '2034-06-15', 'A-I');
 
 --Registros de vehiculos
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('EZ-0670', 'Toyota', 'bc73683a-883d-4b5a-a050-8b573986935d');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('AR-4582', 'Toyota', '7e8e5d3c-9a2f-4c1b-b4d0-5e3a8f7c9b2d');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('SD-1203', 'Toyota', '1a6c4b9f-3d8e-4a7d-8f0c-2b5e1d4a6f3b');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('MG-7856', 'Toyota', '8c0e7f2a-6b4d-4e9c-a1f2-7d3c0b9e8a1f');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('LF-0192', 'Toyota', '2d5b6a8e-1f7c-402d-9b3a-6c8d5e0f7b9a');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('JL-9012', 'Toyota', '5f4a1e9d-0c3b-47e2-8d1a-4b6c7e2d9f8a');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('CM-5647', 'Toyota', '3b7d0c6e-5a1f-49b3-c0d2-8e9f1a7b6d5c');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('PS-2378', 'Toyota', '9e2a8d1c-7f5b-46a0-d8c3-1b0e9c4d2a7f');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('EP-6734', 'Toyota', '4c5f3e7b-2d6a-41f9-a3e1-0b9c8d7e6f5a');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('RG-3415', 'Toyota', '0a9b8c7d-e6f5-48d1-b2c4-3a5f7e1b9d0c');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('MR-8901', 'Toyota', '6d8e9f0a-b1c2-43e4-c5d6-7e8f9a0b1c2d');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('SH-4567', 'Toyota', 'f1e0d3c2-a4b5-47f6-98d7-5c6b7a8d9f0e');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('AG-1098', 'Toyota', 'a2b3c4d5-e6f7-40a1-b2c3-d4e5f6a7b8c9');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('AM-7654', 'Toyota', '5c6b7a8d-9f0e-44c1-d2b3-a4e5f6d7c8b9');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('IO-0987', 'Toyota', 'b9d8c7a6-f5e4-41d3-a2b1-0c9d8e7f6a5b');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('DJ-5432', 'Toyota', 'e4d5c6b7-a8f9-42e1-b3d4-c5a6b7e8d9f0');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('PN-2109', 'Toyota', '3a5f7e1b-9d0c-45b6-c7d8-e9f0a1b2c3d4');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('MC-6543', 'Toyota', '8b9c0d1e-2f3a-48d0-9c1b-7e6f5d4c3b2a');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('RV-3210', 'Toyota', '1d2c3b4a-5e6f-49e0-a1b2-c3d4e5f6a7b8');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('DM-8765', 'Toyota', '7f6e5d4c-3b2a-46f1-b0c9-a8d7e6f5d4c3');
-INSERT INTO registered_vehicles (plate, brand, driver_id) VALUES('NR-1357', 'Toyota', '4e3d2c1b-0a9f-43e2-b5c6-d7a8e9f0b1c2');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('EZ-0670', 'Rojo', 'Bajaj RE', 'Toyota', 'bc73683a-883d-4b5a-a050-8b573986935d');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('AR-4582', 'Azul', 'Honda TUK', 'Toyota', '7e8e5d3c-9a2f-4c1b-b4d0-5e3a8f7c9b2d');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('SD-1203', 'Verde', 'TVS King', 'Toyota', '1a6c4b9f-3d8e-4a7d-8f0c-2b5e1d4a6f3b');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('MG-7856', 'Amarillo', 'Piaggio Ape', 'Toyota', '8c0e7f2a-6b4d-4e9c-a1f2-7d3c0b9e8a1f');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('LF-0192', 'Negro', 'Bajaj Maxima', 'Toyota', '2d5b6a8e-1f7c-402d-9b3a-6c8d5e0f7b9a');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('JL-9012', 'Blanco', 'Honda TUK', 'Toyota', '5f4a1e9d-0c3b-47e2-8d1a-4b6c7e2d9f8a');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('CM-5647', 'Rojo', 'TVS King', 'Toyota', '3b7d0c6e-5a1f-49b3-c0d2-8e9f1a7b6d5c');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('PS-2378', 'Azul', 'Bajaj RE', 'Toyota', '9e2a8d1c-7f5b-46a0-d8c3-1b0e9c4d2a7f');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('EP-6734', 'Verde', 'Piaggio Ape', 'Toyota', '4c5f3e7b-2d6a-41f9-a3e1-0b9c8d7e6f5a');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('RG-3415', 'Amarillo', 'Honda TUK', 'Toyota', '0a9b8c7d-e6f5-48d1-b2c4-3a5f7e1b9d0c');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('MR-8901', 'Negro', 'TVS King', 'Toyota', '6d8e9f0a-b1c2-43e4-c5d6-7e8f9a0b1c2d');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('SH-4567', 'Blanco', 'Bajaj Maxima', 'Toyota', 'f1e0d3c2-a4b5-47f6-98d7-5c6b7a8d9f0e');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('AG-1098', 'Rojo', 'Piaggio Ape', 'Toyota', 'a2b3c4d5-e6f7-40a1-b2c3-d4e5f6a7b8c9');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('AM-7654', 'Azul', 'Honda TUK', 'Toyota', '5c6b7a8d-9f0e-44c1-d2b3-a4e5f6d7c8b9');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('IO-0987', 'Verde', 'TVS King', 'Toyota', 'b9d8c7a6-f5e4-41d3-a2b1-0c9d8e7f6a5b');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('DJ-5432', 'Amarillo', 'Bajaj RE', 'Toyota', 'e4d5c6b7-a8f9-42e1-b3d4-c5a6b7e8d9f0');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('PN-2109', 'Negro', 'Piaggio Ape', 'Toyota', '3a5f7e1b-9d0c-45b6-c7d8-e9f0a1b2c3d4');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('MC-6543', 'Blanco', 'TVS King', 'Toyota', '8b9c0d1e-2f3a-48d0-9c1b-7e6f5d4c3b2a');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('RV-3210', 'Rojo', 'Honda TUK', 'Toyota', '1d2c3b4a-5e6f-49e0-a1b2-c3d4e5f6a7b8');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('DM-8765', 'Azul', 'Bajaj Maxima', 'Toyota', '7f6e5d4c-3b2a-46f1-b0c9-a8d7e6f5d4c3');
+INSERT INTO registered_vehicles (plate, color, model, brand, driver_id) VALUES('NR-1357', 'Verde', 'TVS King', 'Toyota', '4e3d2c1b-0a9f-43e2-b5c6-d7a8e9f0b1c2');
 
 --soats
 INSERT INTO soat_policies (id_soat, insurance_policy, expiration_date, vehicle_plate, driver_id) 
