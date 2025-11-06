@@ -11,11 +11,11 @@ export const createUser = async ({ name, last_name, dni, age, email, phone, pass
   return result.rows[0];
 };
 
-export const logIn = async (email, password) => {
+/* export const logIn = async (email, password) => {
   const result = await pool.query(
-    `SELECT* FROM `
+    `SELECT name, last_name, email, password, role FROM users WHERE email = $1`,
   );
-}
+} */
 
 export const findUserByDNI = async (dni) => {
   const result = await pool.query(`SELECT * FROM users WHERE dni = $1`, [dni]);

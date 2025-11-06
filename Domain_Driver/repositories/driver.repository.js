@@ -19,7 +19,93 @@ export const finbyId = async (id) => {
   return result.rows[0];
 };
 
-// Puedes agregar más funciones aquí según lo necesites
+
+// Verifica que la licencia exista y no esté vencida
+export const verifyLicense = async (license_number, license_expiration_date, name, last_name) => {
+  try {
+    // Validación defensiva de parámetros
+    if (!name || !last_name) {
+      console.error('Faltan nombre o apellido en la petición');
+      return { valid: false, error: 'Faltan nombre o apellido en la petición' };
+    }
+    const firstName = name.split(' ')[0];
+    const firstLastName = last_name.split(' ')[0];
+    // Buscar licencia y datos del conductor
+    const result = await pool.query(
+      `SELECT l.expiration_date, d.name, d.last_name FROM drivers_license l JOIN registered_drivers d ON l.id_registered_driver = d.id WHERE l.license_number = $1`,
+      [license_number]
+    );
+    if (result.rowCount === 0) {
+      console.error('Licencia no encontrada');
+      return { valid: false, error: 'Licencia no encontrada' };
+    }
+    // Validación defensiva de datos de la base
+    const dbName = result.rows[0].name;
+    const dbLastName = result.rows[0].last_name;
+    if (!dbName || !dbLastName) {
+      console.error('Nombre o apellido no encontrados en la base de datos');
+      return { valid: false, error: 'Nombre o apellido no encontrados en la base de datos' };
+    }
+    const dbExpiration = new Date(result.rows[0].expiration_date);
+    const inputExpiration = new Date(license_expiration_date);
+    // Comparar nombre y apellido
+    if (dbName.split(' ')[0] !== firstName || dbLastName.split(' ')[0] !== firstLastName) {
+      console.error('Nombre o apellido no coinciden con el registrado en la licencia');
+      return { valid: false, error: 'Nombre o apellido no coinciden con el registrado en la licencia' };
+    }
+    // Comparar solo YYYY-MM-DD
+    const dbDateStr = dbExpiration.toISOString().slice(0, 10);
+    const inputDateStr = inputExpiration.toISOString().slice(0, 10);
+    if (dbDateStr !== inputDateStr) {
+      console.error('La fecha de expiración no coincide con la registrada');
+      return { valid: false, error: 'La fecha de expiración no coincide con la registrada' };
+    }
+    if (dbExpiration < new Date()) {
+      console.error('La licencia está vencida');
+      return { valid: false, error: 'La licencia está vencida' };
+    }
+    return { valid: true };
+  } catch (err) {
+    console.error('Error al verificar la licencia:', err);
+    return { valid: false, error: 'Error al verificar la licencia' };
+  }
+};
+
+// Verifica que el SOAT exista y no esté vencido
+export const verifySoat = async (insurance_policy_number, insurance_policy_expiration_date, plate) => {
+  try {
+    const result = await pool.query(
+      `SELECT expiration_date, vehicle_plate FROM soat_policies WHERE insurance_policy = $1`,
+      [insurance_policy_number]
+    );
+    if (result.rowCount === 0) {
+      console.error('SOAT no encontrado');
+      return { valid: false, error: 'SOAT no encontrado' };
+    }
+    const dbExpiration = new Date(result.rows[0].expiration_date);
+    const inputExpiration = new Date(insurance_policy_expiration_date);
+    // Comparar placa
+    if (result.rows[0].vehicle_plate !== plate) {
+      console.error('La placa no coincide con la registrada en el SOAT');
+      return { valid: false, error: 'La placa no coincide con la registrada en el SOAT' };
+    }
+    // Comparar solo YYYY-MM-DD
+    const dbDateStr = dbExpiration.toISOString().slice(0, 10);
+    const inputDateStr = inputExpiration.toISOString().slice(0, 10);
+    if (dbDateStr !== inputDateStr) {
+      console.error('La fecha de expiración no coincide con la registrada');
+      return { valid: false, error: 'La fecha de expiración no coincide con la registrada' };
+    }
+    if (dbExpiration < new Date()) {
+      console.error('El SOAT está vencido');
+      return { valid: false, error: 'El SOAT está vencido' };
+    }
+    return { valid: true };
+  } catch (err) {
+    console.error('Error al verificar el SOAT:', err);
+    return { valid: false, error: 'Error al verificar el SOAT' };
+  }
+};
 
 export const validateDriverData = async(dni, license_number, plate, name, last_name) => {
   // Validar que el DNI del conductor exista

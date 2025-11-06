@@ -1,13 +1,16 @@
 import {
   createUser,
   findUserByDNI,
-  findUserByEmailOrPhone,
-  logIn
+  findUserByEmail,
+  findUserByPhone
+  /* logIn */
 } from '../repositories/user.repository.js';
 import { createPassenger } from '../../Domain_Passenger/repositories/passenger.repository.js';
 import {
   createDriver,
-  validateDriverData
+  validateDriverData,
+  verifyLicense,
+  verifySoat
 } from '../../Domain_Driver/repositories/driver.repository.js';
 import { getUserRoles } from '../repositories/role.repository.js';
 import { generateToken } from '../utils/tokenUtils.js';
@@ -104,25 +107,38 @@ export const registerDriver = async (RegisterDriverDto) => {
   // validaciones de los campos
   const validation = await validateData(driverDto);
 
-
   if (!validation.valid) {
     throw new Error(validation.data.error);
   }
 
-  /* 
-     verificamos que la licencia exista y le pertenezca al driver al igual que
-     la placa del vehiculo 
-  */
+  // Verificar licencia
+  const licenseCheck = await verifyLicense(license_number, license_expiration_date);
+  if (!licenseCheck.valid) {
+    return {
+      valid: false,
+      status: 400,
+      data: { error: licenseCheck.error || 'Licencia inválida o no existe' }
+    };
+  }
 
+  // Verificar SOAT
+  const soatCheck = await verifySoat(insurance_policy_number, insurance_policy_expiration_date);
+  if (!soatCheck.valid) {
+    return {
+      valid: false,
+      status: 400,
+      data: { error: soatCheck.error || 'SOAT inválido o no existe' }
+    };
+  }
+
+  // Verificamos que la licencia y placa pertenezcan al driver
   const is_data_valid = await validateDriverData(dni, license_number, plate, name, last_name);
-  //Falta validar el SOAT y las fechas de expiracion (licencia y SOAT)
-
   if (!is_data_valid) {
     return {
       valid: false,
       status: 400,
-      data: {error: 'Invalid data'}
-    }
+      data: { error: 'Datos de conductor inválidos' }
+    };
   }
 
   // creamos el usuario
@@ -166,18 +182,70 @@ export const registerDriver = async (RegisterDriverDto) => {
 };
 
 // Inicio de sesión (pasajeros y conductores)
-export const loginUser = async (email, password) => {
-  const does_user_exist = await logIn(email,password)
+export const loginUser = async (loginDto) => {
+  const { emailorphone, password } = loginDto;
 
-  if(!does_user_exist){
-    return {
-      valid: false,
-      status: 400,
-      data:{error : "El usuario no existe"} 
+  // Validación de email
+  const emailRegex = /^[\w.-]+@([\w-]+\.)+(com||edu.pe)$/i;
+  // Validación de teléfono peruano: +51 seguido de 9 dígitos que empieza con 9
+  const phoneRegex = /^\+51\s?9\d{8}$/;
+
+  let does_user_exist = null;
+
+  if (emailorphone.includes("@")) {
+    // Validar email real
+    if (!emailRegex.test(emailorphone)) {
+      return {
+        valid: false,
+        status: 400,
+        data: { error: 'El correo debe ser válido y terminar en .com, .edu o .pe' }
+      };
     }
+    console.log("Iniciando sesión con email...");
+    does_user_exist = await findUserByEmail(emailorphone);
+  } else {
+    // Validar teléfono peruano
+    if (!phoneRegex.test(emailorphone)) {
+      return {
+        valid: false,
+        status: 400,
+        data: { error: 'El teléfono debe iniciar con +51 y tener 9 dígitos comenzando con 9' }
+      };
+    }
+    console.log("Iniciando sesión con teléfono...");
+    does_user_exist = await findUserByPhone(emailorphone);
   }
 
-  return console.log("inicio de sesión exitoso!!!")
+  if (does_user_exist && await bcrypt.compare(password, does_user_exist.password)) {
+    const token = generateToken({
+      userId: does_user_exist.id,
+      dni: does_user_exist.dni,
+      role: does_user_exist.role,
+    });
+    return {
+      valid: true,
+      status: 200,
+      data: {
+        message: 'Login successful',
+        token,
+        role: does_user_exist.role,
+        user: {
+          id: does_user_exist.id,
+          name: does_user_exist.name,
+          last_name: does_user_exist.last_name,
+          email: does_user_exist.email,
+          phone: does_user_exist.phone,
+        },
+      },
+    };
+  }
+
+  // Si el usuario no existe o la contraseña es incorrecta, retorna objeto de error
+  return {
+    valid: false,
+    status: 401,
+    data: { error: 'Usuario o contraseña incorrectos' }
+  };
 }
 
 // Funcion que valida que los campos de los formularios de registro de pasajeros y conductores hayan sido llenados correctamente
