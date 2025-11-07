@@ -86,6 +86,13 @@ export const registerPassenger = async (RegisterPassengerDto) => {
 
 // Registrar conductores
 export const registerDriver = async (RegisterDriverDto) => {
+  // Log para depuración: muestra el DTO recibido
+  /* console.log('DTO recibido en registerDriver:', RegisterDriverDto); */
+
+  // Validación explícita de DNI
+  if (!RegisterDriverDto.dni) {
+    throw new Error('El campo dni no fue recibido en el DTO. Verifica la estructura del objeto enviado.');
+  }
   // Nos aseguramos que el DTO tenga el campo role: "DRIVER"
   const driverDto = { ...RegisterDriverDto, role: "DRIVER" };
 
@@ -111,8 +118,8 @@ export const registerDriver = async (RegisterDriverDto) => {
     throw new Error(validation.data.error);
   }
 
-  // Verificar licencia
-  const licenseCheck = await verifyLicense(license_number, license_expiration_date);
+  // Verificar licencia (ahora pasando name y last_name)
+  const licenseCheck = await verifyLicense(license_number, license_expiration_date, name, last_name);
   if (!licenseCheck.valid) {
     return {
       valid: false,
@@ -122,7 +129,7 @@ export const registerDriver = async (RegisterDriverDto) => {
   }
 
   // Verificar SOAT
-  const soatCheck = await verifySoat(insurance_policy_number, insurance_policy_expiration_date);
+  const soatCheck = await verifySoat(insurance_policy_number, insurance_policy_expiration_date, plate);
   if (!soatCheck.valid) {
     return {
       valid: false,
@@ -255,15 +262,13 @@ const validateData = async (RegisterDto) => {
     Validaciones generales ------------------------------------------------------------
   */
   const {dni, phone, email, password, name, last_name, role} = RegisterDto;
-  
-  // Eliminamos espacios vacios del DNI
-  // Validamos que el campo del DNI haya sido completado.
-  // Validamos que el DNI solo tenga números
-  // Validamos que el DNI tenga 8 caracteres.
-  // Validamos que el DNI ingresado no exista en la bd
 
-  const trimedDNI = dni.trim();
+  // Eliminamos espacios vacíos y validamos que los campos existan
+  const trimedDNI = (dni || '').trim();
+  const trimedPhone = (phone || '').trim();
+  const trimedEmail = (email || '').trim();
 
+  // Validaciones de DNI
   if (!trimedDNI) {
     return {
       valid: false,
@@ -271,7 +276,6 @@ const validateData = async (RegisterDto) => {
       data: { error: 'Debe ingresar un DNI' },
     };
   }
-
   if(!/^\d+$/.test(trimedDNI)) {
     return {
       valid: false,
@@ -279,7 +283,6 @@ const validateData = async (RegisterDto) => {
       data: {error: 'El DNI no puede contener letras, solo números'}
     }
   }
-  
   if(trimedDNI.length != 8) {
     return {
       valid: false,
@@ -287,7 +290,6 @@ const validateData = async (RegisterDto) => {
       data: { error: 'El DNI debe tener 8 dígitos' }
     };
   }
-
   const existingUser = await findUserByDNI(trimedDNI);
   if (existingUser) {
     return { 
@@ -296,14 +298,7 @@ const validateData = async (RegisterDto) => {
       data: { error: 'DNI ya registrado' } };
   }
 
-  // Eliminamos espacios vacios del phone
-  // Validamos que el campo phone haya sido completado
-  // Validamos que se incluya antes del phone el código de Perú (+51)
-  // Validamos que phone empiece con 9
-  // Validamos que phone tenga 9 digitos
-  // Validamos que phone solo tenga números
-
-  const trimedPhone = phone.trim();
+  // Validaciones de teléfono
   if(!trimedPhone) {
     return {
       valid: false,
@@ -311,7 +306,6 @@ const validateData = async (RegisterDto) => {
       data: { error: 'Debe ingresar un número de teléfono'}
     }
   }
-
   if(trimedPhone.substring(0,3) != '+51') {
     return {
       valid: false,
@@ -319,7 +313,6 @@ const validateData = async (RegisterDto) => {
       data: { error: 'Antes del número de teléfono debe incluir el código de Perú (+51)'}
     }
   }
-
   if(trimedPhone[4] != '9' || trimedPhone.substring(3, trimedPhone.length-1).length != 9) {
     console.log("PRUEBAS DE PHONE");
     console.log(trimedPhone[3]);
@@ -331,11 +324,7 @@ const validateData = async (RegisterDto) => {
     }
   }
 
-  // Eliminamos espacios vacios del email
-  // Validamos que el campo del email haya sido completado
-  // Validamos que el campo incluya el @
-  const trimedEmail = email.trim();
-
+  // Validaciones de email
   if (!trimedEmail) {
     return {
       valid: false,
@@ -343,7 +332,6 @@ const validateData = async (RegisterDto) => {
       data: { error: 'Debe ingresar un correo electrónico' },
     };
   }
-
   if(!trimedEmail.includes("@")) {
     return {
       valid: false,
@@ -379,6 +367,10 @@ const validateData = async (RegisterDto) => {
       data: { error: 'Debe ingresar una contraseña' }
     };
   }
+
+  console.log("Name", name);
+  console.log("Last Name", last_name);
+  console.log("Role", role);
 
   // Validamos que el campo name y last_name hayan sido completados
   if(!name || !last_name) {

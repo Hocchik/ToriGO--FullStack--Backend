@@ -86,6 +86,8 @@ export const verifySoat = async (insurance_policy_number, insurance_policy_expir
     const inputExpiration = new Date(insurance_policy_expiration_date);
     // Comparar placa
     if (result.rows[0].vehicle_plate !== plate) {
+      console.log("Placa", plate);
+      console.log("Placa registrada", result.rows[0].vehicle_plate);
       console.error('La placa no coincide con la registrada en el SOAT');
       return { valid: false, error: 'La placa no coincide con la registrada en el SOAT' };
     }
