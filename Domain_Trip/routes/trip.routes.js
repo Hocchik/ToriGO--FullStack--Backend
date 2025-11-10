@@ -1,32 +1,36 @@
 import express from 'express';
-import { requestTrip, acceptTrip, completeTrip, getUserTrips } from '../controllers/trip.controller.js';
+import {
+	requestTrip,
+	acceptTrip,
+	completeTrip,
+	getUserTrips,
+	listAvailableTripsForDrivers,
+	acceptTripByAuthenticatedDriver,
+	updateDriverLocation,
+	markDriverArrived,
+	confirmPassengerBoarded,
+	startTripByDriver,
+	cancelTrip,
+	getTripDetails,
+} from '../controllers/trip.controller.js';
+import { authenticate } from '../../Domain_Auth/middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/accept', acceptTrip);
+// Passenger endpoints
+router.post('/request', requestTrip);
+router.post('/accept', acceptTrip); // legacy/public: requires driver_id in body
 router.post('/complete', completeTrip);
 router.get('/history', getUserTrips);
-router.post('/request', requestTrip);
 
-const isDriverValid = async (driverId) => {
-  const driver = await Driver.findById(driverId);
-  return driver.soatValid && driver.breveteValid && driver.age >= 18;
-};
-
-router.post('/trip/start', async (req, res) => {
-    const valid = await isDriverValid(req.body.driverId);
-  if (!valid) return res.status(403).json({ error: 'Conductor no cumple requisitos legales' });
-  const { driverId, passengerId, origin, destination } = req.body;
-  const trip = await Trip.create({
-    driverId,
-    passengerId,
-    origin,
-    destination,
-    status: 'active',
-    startedAt: new Date(),
-  });
-  res.json(trip);
-});
-
+// Driver-facing endpoints (trip domain)
+router.get('/available', authenticate, listAvailableTripsForDrivers);
+router.post('/:trip_id/accept', authenticate, acceptTripByAuthenticatedDriver);
+router.post('/:trip_id/location', authenticate, updateDriverLocation);
+router.post('/:trip_id/arrived', authenticate, markDriverArrived);
+router.post('/:trip_id/boarded', authenticate, confirmPassengerBoarded);
+router.post('/:trip_id/start', authenticate, startTripByDriver);
+router.post('/:trip_id/cancel', authenticate, cancelTrip);
+router.get('/:trip_id', authenticate, getTripDetails);
 
 export default router;

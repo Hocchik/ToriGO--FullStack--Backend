@@ -35,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/motorcycles', motorcycleRoutes);
+// Note: driver-specific trip actions are handled under `/api/trips` in Domain_Trip
 app.use('/api/password', passwordRoutes);
 app.use('/api/test', testRoutes);
 

@@ -19,6 +19,13 @@ export const finbyId = async (id) => {
   return result.rows[0];
 };
 
+export const findByUserId = async (user_id) => {
+  const result = await pool.query(
+    `SELECT * FROM drivers WHERE user_id = $1`,
+    [user_id]
+  );
+  return result.rows[0];
+};
 
 // Verifica que la licencia exista y no esté vencida
 export const verifyLicense = async (license_number, license_expiration_date, name, last_name) => {
