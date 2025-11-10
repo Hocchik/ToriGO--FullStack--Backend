@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 // Generate token and store it
 export const createPasswordResetToken = async (user_id) => {
-  const token = crypto.randomBytes(32).toString('hex');
+  const token = crypto.randomBytes(2).toString('hex');
   const expires_at = new Date(Date.now() + 1000 * 60 * 15); // 15 min
 
   await pool.query(
