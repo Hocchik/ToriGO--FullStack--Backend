@@ -5,7 +5,9 @@ import bcrypt from 'bcrypt';
 
 export const requestPasswordReset = async (req, res) => {
   try {
-    const { email } = req.body;
+    const {email} = req.body;
+
+    console.log(`Este es el emailllll: ${email}`)
     const user = await findUserByEmail(email);
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
@@ -19,17 +21,27 @@ export const requestPasswordReset = async (req, res) => {
   }
 };
 
-export const resetPassword = async (req, res) => {
-  try {
-    const { email, token, newPassword } = req.body;
-    const user = await findUserByEmail(email);
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+export const verifyToken = async (req, res) => {
+  try{
+    const {email, token} = req.body;
 
-    const valid = await verifyPasswordResetToken(user.id, token);
+    const valid = await verifyPasswordResetToken(email, token);
     if (!valid) return res.status(400).json({ error: 'Token inválido o expirado' });
 
+    return res.status(200).json({message:"Token verificado con exito"})
+
+  }catch(e){
+    console.error(`Error de verificacion de token: ${e}`);
+    res.status(500).json({ error: 'No se pudo verificar el token' });
+  }
+}
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await updateUserPassword(user.id, hashedPassword);
+    await updateUserPassword(email, hashedPassword);
 
     res.status(200).json({ message: 'Contraseña actualizada correctamente' });
   } catch (err) {
