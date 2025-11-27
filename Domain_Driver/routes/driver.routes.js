@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../../Domain_Auth/middlewares/auth.middleware.js';
-import { listAvailableTrips, acceptTrip, getDriverTrips } from '../controllers/driver.controller.js';
+import { listAvailableTrips, acceptTrip, getDriverTrips, updateAvailability } from '../controllers/driver.controller.js';
 
 const router = express.Router();
 
@@ -24,5 +24,12 @@ router.post('/trips/:trip_id/accept', authenticate, acceptTrip);
  * @access Protected (driver)
  */
 router.get('/me/trips', authenticate, getDriverTrips);
+
+/**
+ * @route POST /api/drivers/availability
+ * @desc Update authenticated driver's availability
+ * @access Protected (driver)
+ */
+router.post('/availability', authenticate, updateAvailability);
 
 export default router;

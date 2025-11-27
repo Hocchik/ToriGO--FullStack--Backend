@@ -1,3 +1,5 @@
+/* Primera Version */
+
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   full_name TEXT NOT NULL,

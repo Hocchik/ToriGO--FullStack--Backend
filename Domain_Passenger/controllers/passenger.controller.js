@@ -1,23 +1,17 @@
-// controllers/passengerController.js
-import { createPassenger, findPassengerByDNI } from '../models/Passenger.js';
+import { createPassenger } from '../repositories/passenger.repository.js';
 
 export const registerPassenger = async (req, res) => {
   try {
-    const { nombre, dni, edad, email, password, tutor_id } = req.body;
+    // prefer authenticated user id if available
+    const user_id = req.user?.userId || req.body.user_id || req.body.userId;
+    const guardian_id = req.body.guardian_id || req.body.tutor_id || null;
 
-    // Validación de edad
-    if (edad < 18 && !tutor_id) {
-      return res.status(400).json({ error: 'Menores deben tener tutor registrado' });
-    }
+    if (!user_id) return res.status(400).json({ error: 'user_id is required or authenticate the request' });
 
-    const existing = await findPassengerByDNI(dni);
-    if (existing) {
-      return res.status(409).json({ error: 'DNI ya registrado' });
-    }
-
-    const newPassenger = await createPassenger({ nombre, dni, edad, email, password, tutor_id });
+    const newPassenger = await createPassenger({ user_id, guardian_id });
     res.status(201).json(newPassenger);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Error al registrar pasajero' });
   }
 };

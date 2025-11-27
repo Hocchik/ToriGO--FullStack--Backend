@@ -27,7 +27,7 @@ export const registerPassenger = async (RegisterPassengerDto) => {
   }
 
   // si el form está completo, se continua con el flujo:
-  const { name, last_name, dni, age, email, phone, password, role } = RegisterPassengerDto;
+  const { name, last_name, dni, age, email, phone, password } = RegisterPassengerDto;
 
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -39,7 +39,6 @@ export const registerPassenger = async (RegisterPassengerDto) => {
     email,
     phone,
     password: hashedPassword,
-    role,
   });
 
   // // se puede eliminar
@@ -94,7 +93,7 @@ export const registerDriver = async (RegisterDriverDto) => {
     throw new Error('El campo dni no fue recibido en el DTO. Verifica la estructura del objeto enviado.');
   }
   // Nos aseguramos que el DTO tenga el campo role: "DRIVER"
-  const driverDto = { ...RegisterDriverDto, role: "DRIVER" };
+  const driverDto = { ...RegisterDriverDto };
 
   const {
     name,
@@ -107,8 +106,7 @@ export const registerDriver = async (RegisterDriverDto) => {
     insurance_policy_expiration_date,
     email,
     phone,
-    password,
-    role
+    password
   } = driverDto;
 
   // validaciones de los campos
@@ -159,17 +157,16 @@ export const registerDriver = async (RegisterDriverDto) => {
     dni,
     phone,
     email,
-    age:age_check, // No necesario para los drivers
+    age: age_check, // No necesario para los drivers
     password: hashedPassword,
-    role: role_driver,
   })
 
     // creamos al driver
-    const driver = createDriver({
-    user_id: user.id,
-    license_number,
-    plate,
-  });
+    const driver = await createDriver({
+      user_id: user.id,
+      license_number,
+      plate,
+    });
   
     return {
     status: 201,
@@ -190,8 +187,17 @@ export const registerDriver = async (RegisterDriverDto) => {
 
 // Inicio de sesión (pasajeros y conductores)
 export const loginUser = async (loginDto) => {
-  const { emailorphone, password } = loginDto;
+  const { emailorphone, email, phone, password } = loginDto || {};
+  const identifier = (emailorphone || email || phone || '').trim();
 
+  if (!identifier) {
+    return { valid: false, status: 400, data: { error: 'Debe proporcionar email o teléfono' } };
+  }
+  if (!password) {
+    return { valid: false, status: 400, data: { error: 'Debe proporcionar la contraseña' } };
+  }
+
+  console.log( await bcrypt.hash(password, 10));
   // Validación de email
   const emailRegex = /^[\w.-]+@([\w-]+\.)+(com||edu.pe)$/i;
   // Validación de teléfono peruano: +51 seguido de 9 dígitos que empieza con 9
@@ -199,9 +205,9 @@ export const loginUser = async (loginDto) => {
 
   let does_user_exist = null;
 
-  if (emailorphone.includes("@")) {
+  if (identifier.includes("@")) {
     // Validar email real
-    if (!emailRegex.test(emailorphone)) {
+    if (!emailRegex.test(identifier)) {
       return {
         valid: false,
         status: 400,
@@ -209,10 +215,10 @@ export const loginUser = async (loginDto) => {
       };
     }
     console.log("Iniciando sesión con email...");
-    does_user_exist = await findUserByEmail(emailorphone);
+    does_user_exist = await findUserByEmail(identifier);
   } else {
     // Validar teléfono peruano
-    if (!phoneRegex.test(emailorphone)) {
+    if (!phoneRegex.test(identifier)) {
       return {
         valid: false,
         status: 400,
@@ -220,14 +226,18 @@ export const loginUser = async (loginDto) => {
       };
     }
     console.log("Iniciando sesión con teléfono...");
-    does_user_exist = await findUserByPhone(emailorphone);
+    does_user_exist = await findUserByPhone(identifier);
   }
 
   if (does_user_exist && await bcrypt.compare(password, does_user_exist.password)) {
+    // derive role based on membership in passengers/drivers tables
+    const roles = await getUserRoles(does_user_exist.id);
+    const derivedRole = roles.includes('driver') ? 'DRIVER' : (roles.includes('passenger') ? 'PASSENGER' : 'USER');
+
     const token = generateToken({
       userId: does_user_exist.id,
       dni: does_user_exist.dni,
-      role: does_user_exist.role,
+      role: derivedRole,
     });
     return {
       valid: true,
@@ -235,7 +245,7 @@ export const loginUser = async (loginDto) => {
       data: {
         message: 'Login successful',
         token,
-        role: does_user_exist.role,
+        role: derivedRole,
         user: {
           id: does_user_exist.id,
           name: does_user_exist.name,
@@ -415,28 +425,13 @@ const validateData = async (RegisterDto) => {
       };
     }
 
-    // Validamos que la placa tenga 7 caracteres (contando el -)
-    const plateLength = plate.length;
-    if(plateLength != 7) {
+    // Nuevo formato de placa: NNNN-LL (ejemplo: 0670-EZ)
+    const platePattern = /^\d{4}-[A-Z]{2}$/;
+    if (!platePattern.test(plate)) {
       return {
         valid: false,
         status: 400,
-        data: { error: 'La placa debe tener 7 caracteres contando el guion (-)' }
-      };
-    }
-
-    // Validamos que la placa empiece con 2 letras y termine con 6 numeros
-    const plateLetters = plate.substring(0,1);
-    const plateNumbers = plate.substring(3, 6);
-
-    const plateLettersPattern = /^[a-zA-Z]+$/.test(plateLetters);
-    const plateNumbersPattern = /^\d+$/.test(plateNumbers)
-    
-    if(!plateLettersPattern || !plateNumbersPattern) {
-       return {
-        valid: false,
-        status: 400,
-        data: { error: 'La placa debe empezar con 2 letras y terminar con 6 numeros'}
+        data: { error: 'La placa debe tener el formato NNNN-LL (ej: 0670-EZ)' }
       };
     }
 
@@ -450,12 +445,13 @@ const validateData = async (RegisterDto) => {
       };
     }
 
-    const insurancePolicyPattern = /^SOAT-[A-Z]{2}-\d{4}-\d{4}$/;
+    // Nuevo formato de póliza: SOAT-<PLATE>-<YEAR> donde <PLATE> es NNNN-LL
+    const insurancePolicyPattern = /^SOAT-\d{4}-[A-Z]{2}-\d{4}$/;
     if(!insurancePolicyPattern.test(insurance_policy_number)) {
       return {
         valid: false,
         status: 400,
-        data: { error: 'La póliza de seguro debe tener el formato correcto (ejemplo: SOAT-EZ-0670-2025)' }
+        data: { error: 'La póliza de seguro debe tener el formato correcto (ejemplo: SOAT-0670-EZ-2025)' }
       };
     }
 

@@ -47,3 +47,23 @@ export const getDriverTrips = async (req, res) => {
     return res.status(status).json({ error: err.message || 'Failed to fetch driver trips' });
   }
 };
+
+// Update availability (available|busy|offline)
+export const updateAvailability = async (req, res) => {
+  try {
+    const role = req.user?.role || req.user?.roles || null;
+    if (role && !(role === 'DRIVER' || role === 'driver' || (Array.isArray(role) && role.includes('driver')))) {
+      return res.status(403).json({ error: 'Access denied: only drivers' });
+    }
+
+    const { availability } = req.body;
+    if (!availability) return res.status(400).json({ error: 'availability is required' });
+
+    const updated = await driverService.updateAvailability(req.user.userId, availability);
+    return res.status(200).json({ message: 'Availability updated', driver: updated });
+  } catch (err) {
+    console.error(err);
+    const status = err.status || 500;
+    return res.status(status).json({ error: err.message || 'Failed to update availability' });
+  }
+};

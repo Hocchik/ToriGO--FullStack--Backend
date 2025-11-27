@@ -12,16 +12,24 @@ import {
 	startTripByDriver,
 	cancelTrip,
 	getTripDetails,
+	upsertTrip,
+	appendTrace,
 } from '../controllers/trip.controller.js';
 import { authenticate } from '../../Domain_Auth/middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 // Passenger endpoints
-router.post('/request', requestTrip);
+router.post('/request', authenticate, requestTrip);
 router.post('/accept', acceptTrip); // legacy/public: requires driver_id in body
 router.post('/complete', completeTrip);
-router.get('/history', getUserTrips);
+router.get('/history', authenticate, getUserTrips);
+
+// Upsert final trip payload (finish or cancel)
+router.post('/', authenticate, upsertTrip);
+
+// Append trace points while trip is active or after (batch or single)
+router.post('/:trip_id/trace', authenticate, appendTrace);
 
 // Driver-facing endpoints (trip domain)
 router.get('/available', authenticate, listAvailableTripsForDrivers);

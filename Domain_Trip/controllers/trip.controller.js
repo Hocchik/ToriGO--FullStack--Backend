@@ -5,7 +5,9 @@ import * as tripRepo from '../repositories/trip.repository.js';
 
 export const requestTrip = async (req, res) => {
   try {
-    const { passenger_id, origin, destination } = req.body;
+    // Prefer authenticated passenger id when available
+    const passenger_id = req.user?.userId || req.body.passenger_id || req.body.passengerId;
+    const { origin, destination } = req.body;
     const fare = calculateFare(origin, destination);
     const trip = await createTrip({ passenger_id, origin, destination, fare });
     res.status(201).json({ message: 'Trip requested', trip });
@@ -123,12 +125,72 @@ export const getTripDetails = async (req, res) => {
   try {
     const tripId = req.params.trip_id || req.query.trip_id || req.body.trip_id;
     if (!tripId) return res.status(400).json({ error: 'trip_id is required' });
-    const trip = await tripRepo.getTripById(tripId);
+    const includeTrace = req.query.includeTrace === 'true' || req.body.includeTrace === true;
+    // try external id first
+    let trip = await tripRepo.getTripWithTracesByExternalId(tripId, includeTrace);
+    if (!trip) {
+      trip = await tripRepo.getTripById(tripId);
+    }
     if (!trip) return res.status(404).json({ error: 'Trip not found' });
     return res.status(200).json({ trip });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Failed to fetch trip details' });
+  }
+};
+
+// Upsert final trip payload (finish or cancel) along with optional traces
+export const upsertTrip = async (req, res) => {
+  try {
+    const payload = req.body;
+    if (!payload || !payload.tripId) return res.status(400).json({ error: 'tripId is required in payload' });
+
+    // Map payload fields
+    const data = {
+      external_id: payload.tripId,
+      passenger_id: payload.passengerId || null,
+      driver_id: payload.driverId || null,
+      origin: payload.origin || null,
+      destination: payload.destination || null,
+      price: payload.price || payload.fare || null,
+      started_at: payload.startedAt || null,
+      finished_at: payload.finishedAt || null,
+      status: payload.status || null,
+      raw_payload: payload.raw || payload,
+      driver_last_lat: payload.driverTraceEnd?.lat || null,
+      driver_last_lng: payload.driverTraceEnd?.lng || null,
+    };
+
+    // Upsert trips row
+    const trip = await tripRepo.upsertTripByExternalId(data);
+
+    // If traces were provided, insert them transactionally
+    if (Array.isArray(payload.driverTrace) && payload.driverTrace.length > 0) {
+      await tripRepo.insertTripTraces(trip.id, payload.driverTrace.map(t => ({ lat: t.lat, lng: t.lng, ts: t.ts })));
+    }
+
+    // return created/updated trip external id
+    return res.status(200).json({ id: trip.external_id || trip.id });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to upsert trip' });
+  }
+};
+
+// Append trace points for a given tripId (external id)
+export const appendTrace = async (req, res) => {
+  try {
+    const externalId = req.params.trip_id;
+    const points = req.body.points || (req.body.point ? [req.body.point] : null);
+    if (!externalId || !points) return res.status(400).json({ error: 'trip_id and points are required' });
+    // Normalize points to objects with lat,lng,ts
+    const normalized = points.map(p => ({ lat: p.lat, lng: p.lng, ts: p.ts || new Date() }));
+    const inserted = await tripRepo.appendTracesByExternalId(externalId, normalized);
+    if (inserted === null) return res.status(404).json({ error: 'Trip not found' });
+    return res.status(200).json({ inserted: inserted.length });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to append traces' });
   }
 };
 
@@ -144,7 +206,9 @@ export const completeTrip = async (req, res) => {
 
 export const getUserTrips = async (req, res) => {
   try {
-    const { user_id, role } = req.query;
+    const user_id = req.query.user_id || req.user?.userId || req.body.user_id || req.body.userId;
+    const role = req.query.role || req.body.role || (req.user ? req.user.role : 'passenger');
+    if (!user_id) return res.status(400).json({ error: 'user_id is required' });
     const trips = await getTripsByUser(user_id, role);
     res.status(200).json({ trips });
   } catch (err) {

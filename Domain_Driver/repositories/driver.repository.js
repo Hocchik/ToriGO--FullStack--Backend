@@ -2,16 +2,37 @@ import pool from '../../config/dbConfig.js';
 import crypto from 'crypto';
 
 export const createDriver = async (driver) => {
-  const {user_id, license_number, plate} = driver;
-  const id = crypto.randomUUID();
-  const result = await pool.query(
-    `INSERT INTO drivers (license, plate, id, user_id) VALUES ($1, $2, $3, $4) RETURNING *`,
-    [license_number, plate, id, user_id]
-  );
-  return result.rows[0];
+  const { user_id, license_number, plate } = driver;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // Insert into drivers table
+    const driverRes = await client.query(
+      `INSERT INTO drivers (user_id, driver_license) VALUES ($1, $2) RETURNING *`,
+      [user_id, license_number]
+    );
+    const createdDriver = driverRes.rows[0];
+
+    // Insert associated motorcycle (plate belongs to motorcycles table)
+    const motoRes = await client.query(
+      `INSERT INTO motorcycles (driver_id, plate) VALUES ($1, $2) RETURNING *`,
+      [createdDriver.id, plate]
+    );
+    const createdMotorcycle = motoRes.rows[0];
+
+    await client.query('COMMIT');
+
+    // return combined object for convenience
+    return { ...createdDriver, motorcycle: createdMotorcycle };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
-export const finbyId = async (id) => {
+export const findById = async (id) => {
   const result = await pool.query(
     `SELECT id FROM drivers WHERE id = $1`,
     [id]
@@ -23,6 +44,14 @@ export const findByUserId = async (user_id) => {
   const result = await pool.query(
     `SELECT * FROM drivers WHERE user_id = $1`,
     [user_id]
+  );
+  return result.rows[0];
+};
+
+export const setDriverAvailability = async (driver_id, availability) => {
+  const result = await pool.query(
+    `UPDATE drivers SET availability = $1 WHERE id = $2 RETURNING *`,
+    [availability, driver_id]
   );
   return result.rows[0];
 };
@@ -39,7 +68,7 @@ export const verifyLicense = async (license_number, license_expiration_date, nam
     const firstLastName = last_name.split(' ')[0];
     // Buscar licencia y datos del conductor
     const result = await pool.query(
-      `SELECT l.expiration_date, d.name, d.last_name FROM drivers_license l JOIN registered_drivers d ON l.id_registered_driver = d.id WHERE l.license_number = $1`,
+      `SELECT l.expiration_date, d.name, d.last_name FROM drivers_license l JOIN registered_drivers d ON l.registered_driver_id = d.id WHERE l.license_number = $1`,
       [license_number]
     );
     if (result.rowCount === 0) {
@@ -133,7 +162,7 @@ export const validateDriverData = async(dni, license_number, plate, name, last_n
   const driverId = driverResult.rows[0].id;
 
   const driverLicenseResult = await pool.query(
-    `SELECT * FROM drivers_license WHERE id_registered_driver = $1 AND license_number = $2`,
+    `SELECT * FROM drivers_license WHERE registered_driver_id = $1 AND license_number = $2`,
     [driverId, license_number]
   );
 
@@ -151,13 +180,13 @@ export const validateDriverData = async(dni, license_number, plate, name, last_n
   const expiration = new Date(licenseExpirationDate.getFullYear(), licenseExpirationDate.getMonth(), licenseExpirationDate.getDate());
 
   if (expiration < today) {
-    throw new Error(`La licencia ${license} venció el ${licenseExpirationDate.toLocaleDateString()}`);
+    throw new Error(`La licencia ${license_number} venció el ${licenseExpirationDate.toLocaleDateString()}`);
   }
 
   // Validar que la placa del vehiculo le pertenezca al conductor
 
   const vehicleResult = await pool.query(
-    `SELECT * FROM registered_vehicles WHERE driver_id = $1 AND plate = $2`,
+    `SELECT * FROM registered_vehicles WHERE registered_owner_id = $1 AND plate = $2`,
     [driverId, plate]
   );
 

@@ -2,7 +2,7 @@
 -- Adjust values (UUIDs, phone, email) as needed for your environment.
 
 -- Test passenger user
-INSERT INTO users (id, name, last_name, dni, phone, email, age, password, role)
+INSERT INTO users (id, name, last_name, dni, phone, email, age, password)
 VALUES (
   'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   'Test',
@@ -11,8 +11,7 @@ VALUES (
   '+51987654321',
   'test.passenger@example.com',
   30,
-  'testpassword',
-  'PASSENGER'
+  'testpassword'
 )
 ON CONFLICT (dni) DO NOTHING;
 
@@ -29,12 +28,6 @@ JOIN users u ON u.id = p.user_id
 WHERE u.id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa'
 ON CONFLICT DO NOTHING;
 
--- Optional: insert a test driver (uncomment and adjust if needed)
--- INSERT INTO users (id, name, last_name, dni, phone, email, age, password, role)
--- VALUES (
---   'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb',
---   'Test', 'Driver', '87654321', '+51912345678', 'test.driver@example.com', 35, 'driverpass', 'DRIVER'
--- ) ON CONFLICT (dni) DO NOTHING;
 
 -- Optional: create driver record (driver table) for the test driver
 -- INSERT INTO drivers (id, user_id)

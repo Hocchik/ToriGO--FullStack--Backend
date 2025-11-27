@@ -43,3 +43,22 @@ export const getDriverTrips = async (userId) => {
   const trips = await tripRepo.getTripsByUser(driver.id, 'driver');
   return trips;
 };
+
+export const updateAvailability = async (userId, availability) => {
+  const allowed = ['available', 'busy', 'offline'];
+  if (!allowed.includes(availability)) {
+    const err = new Error('Invalid availability value');
+    err.status = 400;
+    throw err;
+  }
+
+  const driver = await driverRepo.findByUserId(userId);
+  if (!driver) {
+    const err = new Error('Driver not found');
+    err.status = 404;
+    throw err;
+  }
+
+  const updated = await driverRepo.setDriverAvailability(driver.id, availability);
+  return updated;
+};

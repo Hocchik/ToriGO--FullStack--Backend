@@ -1,13 +1,13 @@
 import pool from '../../config/dbConfig.js';
+import crypto from 'crypto';
 
-export const createUser = async ({ name, last_name, dni, age, email, phone, password, role }) => {
-  const id = crypto.randomUUID(); 
+export const createUser = async ({ name, last_name, dni, age, email, phone, password }) => {
+  const id = crypto.randomUUID();
   const result = await pool.query(
-    `INSERT INTO users (id, name, last_name, dni, phone, email, age, password, role)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-    [id, name, last_name, dni, phone, email, age, password, role]
+    `INSERT INTO users (id, name, last_name, dni, phone, email, age, password)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    [id, name, last_name, dni, phone, email, age, password]
   );
-  console.log("resultado:......",result);
   return result.rows[0];
 };
 
