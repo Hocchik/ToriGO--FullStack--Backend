@@ -112,7 +112,7 @@ export const registerDriver = async (RegisterDriverDto) => {
   }
 
   // Verificar licencia
-  const licenseCheck = await verifyLicense(license_number, license_expiration_date);
+  const licenseCheck = await verifyLicense(license_number, license_expiration_date, name, last_name);
   if (!licenseCheck.valid) {
     return {
       valid: false,
@@ -122,7 +122,7 @@ export const registerDriver = async (RegisterDriverDto) => {
   }
 
   // Verificar SOAT
-  const soatCheck = await verifySoat(insurance_policy_number, insurance_policy_expiration_date);
+  const soatCheck = await verifySoat(insurance_policy_number, insurance_policy_expiration_date, plate);
   if (!soatCheck.valid) {
     return {
       valid: false,
